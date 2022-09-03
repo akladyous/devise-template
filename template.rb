@@ -1,12 +1,11 @@
 self.source_paths.push __dir__
 
-say "New rails application with devise gem\n"
+# say "New rails application with devise gem\n"
 # current_ruby = ask("Which version of ruby? 1.8.7 or 1.9.2?")
-current_ruby = "3.0.0"
 
-run "rvm gemset create #{app_name}"
-run "rvm #{current_ruby}@#{app_name}"
-create_file ".rvmrc", "rvm use #{current_ruby}@#{app_name}"
+# run "rvm gemset create #{app_name}"
+# run "rvm #{current_ruby}@#{app_name}"
+# create_file ".rvmrc", "rvm use #{current_ruby}@#{app_name}"
 
 gem 'devise', '~> 4.8', '>= 4.8.1'
 gem_group :development, :test do
@@ -21,6 +20,7 @@ after_bundle do
   environment "config.application_name = Rails.application.class.module_parent_name"
   environment "config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }", env: 'development'
 
+  # -------------------------------- devise -------------------------------- START
   generate "devise:install"
   generate "devise", "User", "admin:boolean"
 
@@ -44,10 +44,7 @@ after_bundle do
   end
 
   gsub_file "config/initializers/devise.rb", /  # config.secret_key = .+/, "  config.secret_key = Rails.application.credentials.secret_key_base"
-
-  # devise configuration
   inject_into_file "config/initializers/devise.rb", "  config.navigational_formats = ['/', :html, :turbo_stream]", after: "Devise.setup do |config|\n"
-
   inject_into_file 'config/initializers/devise.rb', after: "# ==> Warden configuration\n" do <<-EOF
     config.warden do |manager|
       manager.failure_app = TurboFailureApp
@@ -70,7 +67,9 @@ after_bundle do
     end
     EOF
   end
+  directory "app/views/devise", "app/views/devise"
 
+  # -------------------------------- devise -------------------------------- END
   # route "root 'home#index'"
   generate "controller home index"
   gsub_file 'config/routes.rb', /^\s+get\s'home\/index'/, "\troot 'home#index'"
@@ -78,7 +77,20 @@ after_bundle do
   get "https://raw.githubusercontent.com/akladyous/rails-devise-template/main/.solargraph.yml", ".solargraph.yml"
   get "https://gist.githubusercontent.com/castwide/28b349566a223dfb439a337aea29713e/raw/715473535f11cf3eeb9216d64d01feac2ea37ac0/rails.rb", "config/initializers/solargraph.rb"
 
-  directory "app/views/devise", "app/views/devise"
+  inject_into_file "app/helpers/application_helper.rb", before: "end" do
+    <<-eos
+    def feedback_for?(object, attribute)
+        return nil if object.errors.empty?
+        if object.errors.has_key?(attribute)
+            return content_tag :div, nil, { class: ['d-block', 'invalid-feedback'] } do
+                resource.errors.full_messages_for(attribute).to_sentence
+            end
+        end
+        nil
+    end
+    eos
+  end
+
   directory "app/views/application", "app/views/application"
   copy_file "app/views/home/index.html.erb", force: true
   copy_file "app/assets/stylesheets/index.css", force: true
@@ -120,5 +132,5 @@ after_bundle do
 
   append_to_file "app/assets/config/manifest.js", "//= link index.css"
   run "rails assets:clobber && rails assets:precompile &&  rm -rf ./public/assets"
-
+  # yard gems
 end
