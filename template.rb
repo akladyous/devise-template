@@ -127,6 +127,7 @@ after_bundle do
       /config/credentials/environment.key
       /config/initializers/secret_token.rb
       /public/assets/builds/*
+      /temp/cache/*
     eos
   end
 
