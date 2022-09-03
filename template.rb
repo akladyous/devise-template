@@ -76,6 +76,7 @@ after_bundle do
   gsub_file 'config/routes.rb', /^\s+get\s'home\/index'/, "\troot 'home#index'"
 
   get "https://raw.githubusercontent.com/akladyous/rails-devise-template/main/.solargraph.yml", ".solargraph.yml"
+  get "https://gist.githubusercontent.com/castwide/28b349566a223dfb439a337aea29713e/raw/715473535f11cf3eeb9216d64d01feac2ea37ac0/rails.rb", "config/initializers/solargraph.rb"
 
   directory "app/views/devise", "app/views/devise"
   directory "app/views/application", "app/views/application"
