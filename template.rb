@@ -1,11 +1,17 @@
-self.source_paths.push __dir__
-
+def source_paths
+  [__dir__]
+end
 # say "New rails application with devise gem\n"
 # current_ruby = ask("Which version of ruby? 1.8.7 or 1.9.2?")
 
 # run "rvm gemset create #{app_name}"
 # run "rvm #{current_ruby}@#{app_name}"
 # create_file ".rvmrc", "rvm use #{current_ruby}@#{app_name}"
+
+def app_name_dasherized
+  app_name.gsub('_', '-')
+end
+
 
 gem 'devise', '~> 4.8', '>= 4.8.1'
 gem_group :development, :test do
@@ -14,6 +20,9 @@ gem_group :development, :test do
   gem 'solargraph-rails', '~> 0.3.1'
   # gem 'faker', git: 'https://github.com/faker-ruby/faker.git', branch: 'master', require: false
 end
+
+remove_file "config/database.yml"
+template "config/database.yml.erb", "config/database.yml"
 
 
 after_bundle do
