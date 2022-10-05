@@ -1,0 +1,3 @@
+--skip-spring
+--javascript esbuild
+--css bootstrap
