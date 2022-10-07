@@ -39,3 +39,38 @@
     background-color: transparent;
     margin: auto;
 }
+/* ------------------------------------------------- */
+.form-control::-webkit-input-placeholder {
+    font-style: italic;
+    font-size: .8em;
+  }
+/* ------------------------------------------------- */
+.tooltip-inner {
+    background-color: white;
+    color: black;
+    box-shadow: 0px 0px 4px black;
+    opacity: 1 !important;
+}
+/* ------------------------------------------------- */
+.button_to {
+    margin: 0;
+}
+.button_to > button {
+    all: initial;
+    display: block;
+    font-family: inherit;
+}
+/* ------------------------------------------------- */
+.link-to {
+    text-decoration: none;
+    color: inherit;
+    outline: 0;
+}
+.link-to:hover {
+    text-decoration: solid;
+    text-shadow: 10px;
+    font-weight: 400;
+    font-size: 1.01em;
+    color: black;
+}
+/* ------------------------------------------------- */

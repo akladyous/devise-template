@@ -1,9 +1,8 @@
-require 'debug'
 def source_paths
   [__dir__]
 end
-say "New rails application with devise gem\n"
-current_ruby = ask("Which version of ruby? 2.7.4 or 3.0.0 ?")
+# say "New rails application with devise gem\n"
+# current_ruby = ask("Which version of ruby? 2.7.4 or 3.0.0 ?")
 
 # run "rvm gemset create #{app_name}"
 # run "rvm #{current_ruby}@#{app_name}"
@@ -12,34 +11,35 @@ def app_name_dasherized
   app_name.gsub('_', '-')
 end
 
-
 gem 'devise', '~> 4.8', '>= 4.8.1'
+gem 'image_processing', '~> 1.2'
 gem_group :development, :test do
   gem 'htmlbeautifier'
   gem 'solargraph', '~> 0.45.0'
   gem 'solargraph-rails', '~> 0.3.1'
-  gem 'faker', git: 'https://github.com/faker-ruby/faker.git', branch: 'master', require: false
+  gem 'faker', :git => 'https://github.com/faker-ruby/faker.git', :branch => 'main', require: false
 end
 
 after_bundle do
+
+  run 'bundle lock --add-platform aarch64-linux'
+  run 'bundle lock --add-platform x86_64-darwin-19'
+  run 'bundle lock --add-platform x86_64-linux'
+  run 'yarn add validate.js'
+
+  rails_command "active_storage:install"
+  rails_command "generate stimulus imageLoader"
+  rails_command "generate stimulus validate"
+
   environment "config.application_name = Rails.application.class.module_parent_name"
   environment "config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }", env: 'development'
-
   # -------------------------------- devise -------------------------------- START
   generate "devise:install"
   generate "devise", "User", "admin:boolean"
 
-  gsub_file "app/models/user.rb", /:recoverable, :rememberable, :validatable/, ":recoverable, :rememberable, :validatable, :trackable" #:confirmable
-
-
   in_root do
     migration = Dir.glob("db/migrate/*").max_by{ |f| File.mtime(f) }
     gsub_file migration, /:admin/, ":admin, default: false"
-
-    # gsub_file migration, /# t.string   :confirmation_token/, "t.string   :confirmation_token"
-    # gsub_file migration, /# t.datetime :confirmed_at/, "t.datetime :confirmed_at"
-    # gsub_file migration, /# t.datetime :confirmation_sent_at/, "t.datetime :confirmation_sent_at"
-    # gsub_file migration, /# t.string   :unconfirmed_email # Only if using reconfirmable/, "t.string   :unconfirmed_email"
 
     gsub_file migration, /# t.integer  :sign_in_count, default: 0, null: false/, "t.integer  :sign_in_count, default: 0, null: false"
     gsub_file migration, /# t.datetime :current_sign_in_at/, "t.datetime :current_sign_in_at"
@@ -72,58 +72,10 @@ after_bundle do
     end
     EOF
   end
-  directory "app/views/devise", "app/views/devise"
 
   # -------------------------------- devise -------------------------------- END
-  # route "root 'home#index'"
   generate "controller home index"
   gsub_file 'config/routes.rb', /^\s+get\s'home\/index'/, "\troot 'home#index'"
-
-  get "https://raw.githubusercontent.com/akladyous/rails-devise-template/main/.solargraph.yml", ".solargraph.yml"
-  get "https://gist.githubusercontent.com/castwide/28b349566a223dfb439a337aea29713e/raw/715473535f11cf3eeb9216d64d01feac2ea37ac0/rails.rb", "config/initializers/solargraph.rb"
-
-  inject_into_file "app/helpers/application_helper.rb", before: "end" do
-    <<-eos
-    def feedback_for?(object, attribute)
-        return nil if object.errors.empty?
-        if object.errors.has_key?(attribute)
-            return content_tag :div, nil, { class: ['d-block', 'invalid-feedback'] } do
-                resource.errors.full_messages_for(attribute).to_sentence
-            end
-        end
-        nil
-    end
-    eos
-  end
-
-  directory "app/views/application", "app/views/application"
-  copy_file "app/views/home/index.html.erb", force: true
-  copy_file "app/assets/stylesheets/index.css", force: true
-  copy_file "app/views/home/index.html.erb", force: true
-  # remove_file "app/views/layouts/application.html.erb"
-  # copy_file "app/views/layouts/application.html.erb"
-  create_file "app/views/layouts/application.html.erb", force: true do <<~EOF
-    <html>
-      <head>
-        <%= render 'head' %>
-      </head>
-      <body>
-        <header>
-            <%= render 'header' %>
-        </header>
-        <%= content_for :content or yield %>
-        <footer>
-            <%= render 'footer' %>
-        </footer>
-      </body>
-    </html>
-    EOF
-  end
-  copy_file "app/views/layouts/devise.html.erb"
-  copy_file "app/assets/stylesheets/index.css"
-  copy_file "app/assets/images/rails.jpeg"
-  copy_file "app/assets/images/avatar.jpeg"
-
   append_to_file ".gitignore" do
     <<~eos
       \n/app/assets/builds/*
@@ -132,11 +84,60 @@ after_bundle do
       /config/credentials/environment.key
       /config/initializers/secret_token.rb
       /public/assets/builds/*
-      /temp/cache/*
+      /tmp/cache/*
     eos
   end
 
+  append_to_file "app/javascript/application.js" do
+    <<~eos
+      \n
+      document.addEventListener('DOMContentLoaded', function (event) {
+          const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+          const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+      })
+    eos
+  end
   append_to_file "app/assets/config/manifest.js", "//= link index.css"
+
+  get "https://raw.githubusercontent.com/akladyous/rails-devise-template/main/.solargraph.yml", ".solargraph.yml"
+  get "https://gist.githubusercontent.com/castwide/28b349566a223dfb439a337aea29713e/raw/715473535f11cf3eeb9216d64d01feac2ea37ac0/rails.rb", "config/initializers/solargraph.rb"
+
+  remove_file "config/database.yml"
+  template    "config/database.yml.erb", "config/database.yml"
+  remove_file "app/controllers/application_controller.rb"
+  copy_file   "app/controllers/application_controller.rb"
+
+
+  remove_file "app/controllers/concerns/devise_params.rb"
+  copy_file   "app/controllers/concerns/devise_params.rb"
+  remove_file "app/helpers/application_helper.rb"
+  copy_file   "app/helpers/application_helper.rb"
+  remove_file "app/models/user.rb"
+  copy_file   "app/models/user.rb"
+
+  copy_file   "app/assets/stylesheets/index.css", force: true
+  copy_file   "app/assets/images/rails.jpeg"
+  copy_file   "app/assets/images/avatar.jpeg"
+  directory   "app/views/application", "app/views/application"
+  directory   "app/views/devise", "app/views/devise"
+  copy_file   "app/views/home/index.html.erb", force: true
+  copy_file   "app/views/layouts/devise.html.erb"
+  remove_file "app/views/layouts/application.html.erb"
+  copy_file   "app/views/layouts/application.html.erb"
+
+  remove_file "app/javascript/controllers/image_loader_controller.js"
+  copy_file   "app/javascript/controllers/image_loader_controller.js"
+  remove_file "app/javascript/controllers/validate_controller.js"
+  copy_file   "app/javascript/controllers/validate_controller.js"
+
+  directory   "app/form_builders", "app/form_builders"
+
+  template    './docker_files/.dockerignore.erb', '.dockerignore'
+  template    './bin/entrypoint.sh.erb', 'bin/entrypoint.sh'
+  template    './bin/run.sh.erb', 'bin/run.sh'
+  run         'chmod +x ./bin/entrypoint.sh'
+
+
   run "rails assets:clobber && rails assets:precompile &&  rm -rf ./public/assets"
   # yard gems
 end
