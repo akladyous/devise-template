@@ -2,8 +2,8 @@ require 'debug'
 def source_paths
   [__dir__]
 end
-say "New rails application with devise gem\n"
-current_ruby = ask("Which version of ruby? 2.7.4 or 3.0.0 ?")
+# say "New rails application with devise gem\n"
+# current_ruby = ask("Which version of ruby? 2.7.4 or 3.0.0 ?")
 
 # run "rvm gemset create #{app_name}"
 # run "rvm #{current_ruby}@#{app_name}"
@@ -18,7 +18,7 @@ gem_group :development, :test do
   gem 'htmlbeautifier'
   gem 'solargraph', '~> 0.45.0'
   gem 'solargraph-rails', '~> 0.3.1'
-  gem 'faker', git: 'https://github.com/faker-ruby/faker.git', branch: 'master', require: false
+  gem 'faker', git: 'https://github.com/faker-ruby/faker.git', branch: 'main', require: false
 end
 
 after_bundle do

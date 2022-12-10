@@ -13,8 +13,9 @@ end
 
 gem 'devise', '~> 4.8', '>= 4.8.1'
 gem 'image_processing', '~> 1.2'
+
 gem_group :development, :test do
-  gem 'htmlbeautifier'
+  gem 'htmlbeautifier', '~> 1.3', '>= 1.3.1'
   gem 'solargraph', '~> 0.45.0'
   gem 'solargraph-rails', '~> 0.3.1'
   gem 'faker', :git => 'https://github.com/faker-ruby/faker.git', :branch => 'main', require: false
